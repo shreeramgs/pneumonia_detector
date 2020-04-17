@@ -97,21 +97,21 @@ from gluoncv.model_zoo import get_model
 ################################################################################
 # We set the hyperparameters as following:
 
-classes = 23
+classes = 2
 
-epochs = 5
+epochs = 40
 lr = 0.001
-per_device_batch_size = 1
+per_device_batch_size = 64
 momentum = 0.9
 wd = 0.0001
 
 lr_factor = 0.75
 lr_steps = [10, 20, 30, np.inf]
 
-num_gpus = 0
-num_workers = 1
-ctx = 0
-batch_size = 50
+num_gpus = 1
+num_workers = 8
+ctx = [mx.gpu(i) for i in range(num_gpus)] if num_gpus > 0 else [mx.cpu()]
+batch_size = per_device_batch_size * max(num_gpus, 1)
 
 ################################################################################
 # Things to keep in mind:
@@ -158,36 +158,21 @@ transform_test = transforms.Compose([
 
 path = r'C:\Users\rka_j\Desktop\x_ray\chest_xray'
 train_data_normal =  r'C:\Users\rka_j\Desktop\x_ray\chest_xray\train'
-#train_data_pneumonia =  r'C:\Users\rka_j\Desktop\x_ray\chest_xray\train'
 val_data_normal = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\val'
-#val_data_pneumonia = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\val'
 test_data_normal = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\test'
-#test_data_pneumonia = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\test'
 
 train_data_normal = gluon.data.DataLoader(
     gluon.data.vision.ImageFolderDataset(train_data_normal).transform_first(transform_train),
     batch_size=batch_size, shuffle=True, num_workers=num_workers)
-'''
-train_data_pneumonia = gluon.data.DataLoader(
-    gluon.data.vision.ImageFolderDataset(train_data_pneumonia).transform_first(transform_train),
-    batch_size=batch_size, shuffle=True, num_workers=num_workers)    
-'''
+
 val_data_normal = gluon.data.DataLoader(
     gluon.data.vision.ImageFolderDataset(val_data_normal).transform_first(transform_test),
     batch_size=batch_size, shuffle=False, num_workers = num_workers)
-'''
-val_data_pneumonia = gluon.data.DataLoader(
-    gluon.data.vision.ImageFolderDataset(val_data_pneumonia).transform_first(transform_test),
-    batch_size=batch_size, shuffle=False, num_workers = num_workers)
-'''
+
 test_data_normal = gluon.data.DataLoader(
     gluon.data.vision.ImageFolderDataset(test_data_normal).transform_first(transform_test),
     batch_size=batch_size, shuffle=False, num_workers = num_workers)
-'''
-test_data_pneumonia = gluon.data.DataLoader(
-    gluon.data.vision.ImageFolderDataset(test_data_pneumonia).transform_first(transform_test),
-    batch_size=batch_size, shuffle=False, num_workers = num_workers)    
-'''
+
 ################################################################################
 #
 # Note that only ``train_data`` uses ``transform_train``, while
@@ -255,7 +240,7 @@ def test(net, val_data, ctx):
 #     full dataset with 40 epochs, it is expected to get accuracy around 80% on test data.
 
 lr_counter = 0
-num_batch = len(train_data)
+num_batch = len(train_data_normal)
 
 for epoch in range(epochs):
     if epoch == lr_steps[lr_counter]:
@@ -266,7 +251,7 @@ for epoch in range(epochs):
     train_loss = 0
     metric.reset()
 
-    for i, batch in enumerate(train_data):
+    for i, batch in enumerate(train_data_normal):
         data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0, even_split=False)
         label = gluon.utils.split_and_load(batch[1], ctx_list=ctx, batch_axis=0, even_split=False)
         with ag.record():
@@ -283,12 +268,12 @@ for epoch in range(epochs):
     _, train_acc = metric.get()
     train_loss /= num_batch
 
-    _, val_acc = test(finetune_net, val_data, ctx)
+    _, val_acc = test(finetune_net, val_data_normal, ctx)
 
     print('[Epoch %d] Train-acc: %.3f, loss: %.3f | Val-acc: %.3f | time: %.1f' %
              (epoch, train_acc, train_loss, val_acc, time.time() - tic))
 
-_, test_acc = test(finetune_net, test_data, ctx)
+_, test_acc = test(finetune_net, test_data_normal, ctx)
 print('[Finished] Test-acc: %.3f' % (test_acc))
 
 ################################################################################
