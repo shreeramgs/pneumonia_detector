@@ -272,7 +272,7 @@ for epoch in range(epochs):
 
     print('[Epoch %d] Train-acc: %.3f, loss: %.3f | Val-acc: %.3f | time: %.1f' %
              (epoch, train_acc, train_loss, val_acc, time.time() - tic))
-
+finetune_net.export("resnet", epoch=1)
 _, test_acc = test(finetune_net, test_data_normal, ctx)
 print('[Finished] Test-acc: %.3f' % (test_acc))
 
