@@ -11,3 +11,11 @@
   test:(put 15% images)
 4. put the path of these folders in the variable present in the model.py
 
+tutoials:
+
+https://gluon-cv.mxnet.io/build/examples_classification/transfer_learning_minc.html
+
+
+kaggle-dataset:
+
+https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia
