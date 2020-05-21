@@ -1,5 +1,13 @@
 # x_ray
 
+install comet-ml from pypi
+mxnet,gluoncv.
+
+Register at (https://www.comet.ml/site/?cache=62352245) here confusion matrix will be stored.
+Important::Change your api key which you will get after registraion under quick start guide with workspace given as active workspace 
+in this line of code.
+<experiment = Experiment(api_key="uVlCssu6MSf2jDhTxV9guqoDI",project_name="model",workspace="yatharth-123")>
+
 1.Libraries to be installed:
    pip install mxnet-cu101
    pip install gluoncv
