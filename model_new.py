@@ -1,4 +1,3 @@
-
 ################################################################################
 # Hyperparameters
 # ----------
@@ -26,8 +25,8 @@ plt.switch_backend('agg')
 experiment = Experiment(api_key="uVlCssu6MSf2jDhTxV9guqoDI",project_name="model",workspace="yatharth-123")
 
 classes = 2
-
-epochs = 40
+class_labels = ['NORMAL','PNEUMONIA']
+epochs = 7
 lr = 0.001
 per_device_batch_size = 64
 momentum = 0.9
@@ -84,10 +83,10 @@ transform_test = transforms.Compose([
 ################################################################################
 # With the data augmentation functions, we can define our data loaders:
 
-path = r'C:\Users\rka_j\Desktop\x_ray\chest_xray'
-train_data_normal =  r'C:\Users\rka_j\Desktop\x_ray\chest_xray\train'
-val_data_normal = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\val'
-test_data_normal = r'C:\Users\rka_j\Desktop\x_ray\chest_xray\test'
+path = r'../input/chest-xray-pneumonia/chest_xray'
+train_data_normal =  r'../input/chest-xray-pneumonia/chest_xray/train'
+val_data_normal = r'../input/chest-xray-pneumonia/chest_xray/val'
+test_data_normal = r'../input/chest-xray-pneumonia/chest_xray/test'
 
 train_data_normal = gluon.data.DataLoader(
     gluon.data.vision.ImageFolderDataset(train_data_normal).transform_first(transform_train),
@@ -177,7 +176,7 @@ def plot_confusion_matrix(cm, classes,
 
     experiment.log_figure(figure_name='X-Ray Confusion Matrix', figure=plt)
 
-def create_confusion_matrix(ctx, val_data):
+def create_confusion_matrix(net,ctx, val_data):
     all_labels = []
     all_outputs = []
 
@@ -257,7 +256,7 @@ for epoch in range(epochs):
              (epoch, train_acc, train_loss, val_acc, time.time() - tic))
 finetune_net.export("resnet", epoch=1)
 _, test_acc = test(finetune_net, test_data_normal, ctx)
-create_confusion_matrix(ctx=ctx, val_data=test_data_normal)
+create_confusion_matrix(finetune_net,ctx=ctx, val_data=test_data_normal)
 print('[Finished] Test-acc: %.3f' % (test_acc))
 
 ################################################################################
